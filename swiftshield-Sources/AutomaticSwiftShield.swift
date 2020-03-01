@@ -6,6 +6,7 @@ class AutomaticSwiftShield: Protector {
     let projectToBuild: String
     let schemeToBuild: String
     let modulesToIgnore: Set<String>
+    let modulesToProtect: Set<String>
     let sdkMode: Bool
 
     var isWorkspace: Bool {
@@ -16,6 +17,7 @@ class AutomaticSwiftShield: Protector {
          projectToBuild: String,
          schemeToBuild: String,
          modulesToIgnore: Set<String>,
+         modulesToProtect: Set<String>,
          protectedClassNameSize: Int,
          dryRun: Bool,
          sdkMode: Bool,
@@ -24,6 +26,7 @@ class AutomaticSwiftShield: Protector {
         self.projectToBuild = projectToBuild
         self.schemeToBuild = schemeToBuild
         self.modulesToIgnore = modulesToIgnore
+        self.modulesToProtect = modulesToProtect
         self.sdkMode = sdkMode
         super.init(basePath: basePath, protectedClassNameSize: protectedClassNameSize, dryRun: dryRun)
         if self.schemeToBuild.isEmpty || self.projectToBuild.isEmpty {
@@ -42,7 +45,8 @@ class AutomaticSwiftShield: Protector {
             exit(error: true)
         }
         let projectBuilder = XcodeProjectBuilder(projectToBuild: projectToBuild, schemeToBuild: schemeToBuild, modulesToIgnore: modulesToIgnore, sdkMode: sdkMode)
-        let modules = projectBuilder.getModulesAndCompilerArguments()
+        let modules = projectBuilder.getModulesAndCompilerArguments().filter { modulesToProtect.contains($0.name) }
+        
         let obfuscationData = AutomaticObfuscationData(modules: modules)
         index(obfuscationData: obfuscationData)
         findReferencesInIndexed(obfuscationData: obfuscationData)
